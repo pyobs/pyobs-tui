@@ -1,4 +1,6 @@
 from typing import Any
+
+from pyobs.events import LogEvent
 from pyobs.modules import Module
 
 from .app import pyobsApp
@@ -10,10 +12,16 @@ class TUI(Module):
     def __init__(self, *args: Any, **kwargs: Any):
         """Inits a new TUI."""
 
-        # init module
         Module.__init__(self, *args, **kwargs)
+        self.app = pyobsApp(self)
+
+    async def open(self) -> None:
+        """Opens the TUI."""
+        await super().open()
+
+        # subscribe to events
+        await self.comm.register_event(LogEvent, self.app.process_log_entry)
 
     async def main(self) -> None:
         """Main loop for application."""
-        app = pyobsApp()
-        await app.run_async()
+        await self.app.run_async()
