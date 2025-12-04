@@ -1,9 +1,10 @@
 from os.path import basename
-from typing import Any
+from typing import Any, cast
 
 from astropy.time import Time
 from pyobs.events import Event, LogEvent
 from pyobs.modules import Module
+from pyobs.utils.shellcommand import ShellCommand
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, VerticalGroup
@@ -20,10 +21,27 @@ class Shell(VerticalGroup):  # type: ignore
     #    self.query_one(Input).focus()
 
     @on(Input.Submitted)
-    def handle_submit(self, event: Input.Submitted) -> None:
-        value = event.value.strip()
-        self.query_one(RichLog).write(value)
+    async def handle_submit(self, event: Input.Submitted) -> None:
+        comm = cast(TuiApp, self.app).module.comm
+        command = event.value.strip()
+
+        try:
+            cmd = ShellCommand.parse(command)
+            self._log(str(cmd))
+        except Exception as e:
+            self._log(f"$ {command}")
+            self._log(f"[red]{str(e)}[/red]")
+            return
+
+        # execute command
+        response = await cmd.execute(comm)
+
+        # log response
+        self._log(response.bbcode)
         event.input.value = ""
+
+    def _log(self, line: str) -> None:
+        self.query_one(RichLog).write(line)
 
 
 class Log(VerticalGroup):  # type: ignore
@@ -59,7 +77,7 @@ class Log(VerticalGroup):  # type: ignore
         self.query_one(RichLog).write(line)
 
 
-class pyobsApp(App):
+class TuiApp(App):
     """A Textual app for pyobs."""
 
     def __init__(self, module: Module, **kwargs: Any):

@@ -3,7 +3,7 @@ from typing import Any
 from pyobs.events import LogEvent
 from pyobs.modules import Module
 
-from .app import pyobsApp
+from .app import TuiApp
 
 
 class TUI(Module):
@@ -13,7 +13,7 @@ class TUI(Module):
         """Inits a new TUI."""
 
         Module.__init__(self, *args, **kwargs)
-        self.app = pyobsApp(self)
+        self.app = TuiApp(self)
 
     async def open(self) -> None:
         """Opens the TUI."""
