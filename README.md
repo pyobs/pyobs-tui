@@ -1,3 +1,3 @@
-# pyobs-gui
+# pyobs-tui
 
-A GUI for pyobs.
+A TUI for pyobs.
